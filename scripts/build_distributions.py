@@ -2,6 +2,7 @@
 from __future__ import annotations
 import argparse, hashlib, json, re, shutil, zipfile
 from pathlib import Path
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SEMVER = re.compile(r"^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$")
@@ -89,12 +90,22 @@ def build_chat(version: str, stage: Path) -> Path:
     return dst
 
 
+def registry_targets() -> list[str]:
+    r=yaml.safe_load((ROOT/"runtime-distribution-registry.yaml").read_text(encoding="utf-8"))
+    targets=list(r.get("active_targets",[]) or [])
+    supported={"chat","custom-gpt"}
+    unknown=set(targets)-supported
+    if unknown:
+        raise SystemExit(f"Registry contains unsupported active targets: {sorted(unknown)}")
+    return targets
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--version")
     ap.add_argument("--output-dir", default=str(ROOT / "dist"))
     args = ap.parse_args()
     version = version_from(args)
+    targets = registry_targets()
     for rel in CORE_FILES + [Path("setup-guide.md"), Path("portable/START-HERE.md")]:
         if not (ROOT / rel).is_file():
             raise SystemExit(f"Obligatorisk fil saknas: {rel}")
@@ -102,15 +113,20 @@ def main() -> int:
     stage = out / ".stage"
     shutil.rmtree(stage, ignore_errors=True)
     stage.mkdir(parents=True)
-    custom = build_custom(version, stage)
-    chat = build_chat(version, stage)
-    czip = out / f"technologytranslator-custom-gpt-v{version}.zip"
-    pzip = out / f"technologytranslator-chat-v{version}.zip"
-    write_zip(custom, czip)
-    write_zip(chat, pzip)
+    built=[]
+    if "custom-gpt" in targets:
+        custom = build_custom(version, stage)
+        czip = out / f"technologytranslator-custom-gpt-v{version}.zip"
+        write_zip(custom, czip)
+        built.append(czip)
+    if "chat" in targets:
+        chat = build_chat(version, stage)
+        pzip = out / f"technologytranslator-chat-v{version}.zip"
+        write_zip(chat, pzip)
+        built.append(pzip)
     shutil.rmtree(stage)
-    print(czip)
-    print(pzip)
+    for path in built:
+        print(path)
     return 0
 
 if __name__ == "__main__":

@@ -50,6 +50,7 @@ def main() -> int:
     p = read_zip(dist / f"technologytranslator-chat-v{v}.zip")
 
     originals = {rel.as_posix(): (ROOT / rel).read_bytes() for rel in ORIGINAL_CUSTOM}
+    originals["gpt-instructions.md"] = (ROOT / "assistant/instructions.md").read_bytes()
     for name, data in originals.items():
         if c.get(name) != data:
             raise SystemExit(f"Custom GPT-filen avviker från källan: {name}")
@@ -84,7 +85,22 @@ def main() -> int:
         if len(p[name]) != meta.get("bytes"):
             raise SystemExit(f"Manifest-storlek stämmer inte: {name}")
 
-    print(f"OK: technologytranslator v{v} validerad; Custom GPT-kärnan är byte-identisk med källorna")
+    critical = [
+        "Svara alltid på samma språk som användaren skriver på.",
+        "Aldrig nedlåtande.",
+        "Förklara varför något spelar roll, inte bara vad det är.",
+        "Fokusera på verksamhetsnytta, konsekvenser, risker och beslut.",
+        "Förenkla utan att förvanska.",
+        "Hitta inte på fakta om produkter, lagar, priser eller aktuella händelser.",
+    ]
+    custom_instr = c.get("gpt-instructions.md", b"").decode("utf-8")
+    chat_instr = p.get("assistant/instructions.md", b"").decode("utf-8")
+    for package_name, package_instr in [("Custom GPT", custom_instr), ("Chat", chat_instr)]:
+        for marker in critical:
+            if marker not in package_instr:
+                raise SystemExit(f"{package_name} saknar kritisk beteendemarkör: {marker}")
+
+    print(f"OK: technologytranslator v{v} validerad; Chat och Custom GPT använder samma canonical instruktion")
     return 0
 
 if __name__ == "__main__":

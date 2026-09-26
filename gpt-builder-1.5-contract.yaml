@@ -84,10 +84,17 @@ runtime_policy:
       compatibility: equivalent
     custom-gpt:
       compatibility: equivalent
-  assessment_pending:
+  inactive:
     claude:
-      compatibility: assessment_pending
+      compatibility: equivalent
+      activation: not_active
+      blocker: distribution_and_regression_not_implemented
+      assessment: docs/claude-opencode-compatibility.md
     opencode:
-      compatibility: assessment_pending
+      compatibility: equivalent
+      activation: not_active
+      blocker: distribution_and_regression_not_implemented
+      assessment: docs/claude-opencode-compatibility.md
+  assessment_pending:
     openai_plugin:
       compatibility: assessment_pending

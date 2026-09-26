@@ -1,0 +1,69 @@
+schema_version: 1
+project:
+  id: technologytranslator
+  name: Tekniköversättaren
+  profile: nontechnical_technology_explainer
+
+instructions:
+  canonical: assistant/instructions.md
+  legacy_source: gpt-instructions.md
+  preserve_legacy_source_byte_identical: true
+
+knowledge_architecture:
+  canonical_root: knowledge
+  expected_files: 2
+  files:
+    - knowledge/examples.md
+    - knowledge/explanation-patterns.md
+
+runtime:
+  chat_zip:
+    enabled: true
+  custom_gpt:
+    enabled: true
+    instruction:
+      source: assistant/instructions.md
+      packaging_path: gpt-instructions.md
+      legacy_packaging_path_only: true
+      max_characters: 8000
+    knowledge:
+      strategy: exact_list
+      expected_files: 2
+  claude:
+    enabled: false
+    compatibility: equivalent
+    activation: not_active
+    blocker: distribution_and_regression_not_implemented
+    assessment: docs/claude-opencode-compatibility.md
+  opencode:
+    enabled: false
+    compatibility: equivalent
+    activation: not_active
+    blocker: distribution_and_regression_not_implemented
+    assessment: docs/claude-opencode-compatibility.md
+  openai_plugin:
+    enabled: false
+    compatibility: equivalent
+    status: assessed_not_active
+    architecture: skills_first
+    activation: not_active
+    blocker: distribution_and_regression_not_implemented
+    assessment: docs/openai-plugin-compatibility.md
+
+capabilities:
+  critical:
+    - audience_adapted_explanation
+    - simplify_without_distortion
+    - business_impact_and_decision_context
+    - same_language_response
+  important:
+    - technical_text_rewriting
+    - nontechnical_comparison
+    - analogy_generation
+    - ambiguity_and_uncertainty_handling
+    - optional_web_research_for_current_facts
+
+release:
+  version_file: VERSION
+  preserve_current_version: true
+  current_version: 1.0.0

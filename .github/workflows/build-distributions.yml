@@ -17,6 +17,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install validation dependencies
+        run: python3 -m pip install PyYAML
+
       - name: Resolve version
         id: version
         shell: bash
@@ -34,6 +42,21 @@ jobs:
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      - name: Validate GPT Builder 1.5 canonical contract
+        run: python3 scripts/validate_gpt_builder_1_5_contract.py
+
+      - name: Validate Claude and OpenCode compatibility
+        run: python3 scripts/validate_claude_opencode_compatibility.py
+
+      - name: Validate OpenAI Plugin compatibility
+        run: python3 scripts/validate_openai_plugin_compatibility.py
+
+      - name: Validate runtime distribution registry
+        run: python3 scripts/validate_runtime_distribution_registry.py
+
+      - name: Final GPT Builder 1.5 migration gate
+        run: python3 scripts/validate_gpt_builder_1_5_migration.py
+
       - name: Build distributions
         run: python3 scripts/build_distributions.py --version "${{ steps.version.outputs.version }}"
 
@@ -44,11 +67,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: technologytranslator-v${{ steps.version.outputs.version }}
-          path: dist/*.zip
+          path: |
+            dist/technologytranslator-custom-gpt-v${{ steps.version.outputs.version }}.zip
+            dist/technologytranslator-chat-v${{ steps.version.outputs.version }}.zip
           retention-days: 14
 
       - name: Attach ZIP files to GitHub Release
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/*.zip --clobber
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}"             "dist/technologytranslator-custom-gpt-v${{ steps.version.outputs.version }}.zip"             "dist/technologytranslator-chat-v${{ steps.version.outputs.version }}.zip"             --clobber

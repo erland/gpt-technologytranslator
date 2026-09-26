@@ -2,6 +2,7 @@
 from __future__ import annotations
 import argparse, hashlib, json, re, zipfile
 from pathlib import Path
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SEMVER = re.compile(r"^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$")
@@ -46,13 +47,21 @@ def main() -> int:
     args = ap.parse_args()
     v = expected_version(args.version)
     dist = Path(args.dist_dir).resolve()
-    c = read_zip(dist / f"technologytranslator-custom-gpt-v{v}.zip")
-    p = read_zip(dist / f"technologytranslator-chat-v{v}.zip")
+    registry=yaml.safe_load((ROOT/"runtime-distribution-registry.yaml").read_text(encoding="utf-8"))
+    active=list(registry.get("active_targets",[]) or [])
+    expected={registry["targets"][name]["artifact_pattern"].format(version=v) for name in active}
+    actual={p.name for p in dist.glob("*.zip")}
+    if actual!=expected:
+        raise SystemExit(f"Distribution set mismatch. expected={sorted(expected)} actual={sorted(actual)}")
+    c = read_zip(dist / f"technologytranslator-custom-gpt-v{v}.zip") if "custom-gpt" in active else {}
+    p = read_zip(dist / f"technologytranslator-chat-v{v}.zip") if "chat" in active else {}
 
     originals = {rel.as_posix(): (ROOT / rel).read_bytes() for rel in ORIGINAL_CUSTOM}
-    for name, data in originals.items():
-        if c.get(name) != data:
-            raise SystemExit(f"Custom GPT-filen avviker från källan: {name}")
+    originals["gpt-instructions.md"] = (ROOT / "assistant/instructions.md").read_bytes()
+    if "custom-gpt" in active:
+        for name, data in originals.items():
+            if c.get(name) != data:
+                raise SystemExit(f"Custom GPT-filen avviker från källan: {name}")
 
     portable_map = {
         "assistant/instructions.md": originals["gpt-instructions.md"],
@@ -60,31 +69,48 @@ def main() -> int:
         "assistant/profile.md": originals["gpt-profile.md"],
         **{rel.as_posix(): originals[rel.as_posix()] for rel in KNOWLEDGE},
     }
-    for name, data in portable_map.items():
-        if p.get(name) != data:
-            raise SystemExit(f"Portable-filen avviker från originalet: {name}")
+    if "chat" in active:
+        for name, data in portable_map.items():
+            if p.get(name) != data:
+                raise SystemExit(f"Portable-filen avviker från originalet: {name}")
 
     expected_version_bytes = (v + "\n").encode()
-    if c.get("VERSION") != expected_version_bytes:
+    if "custom-gpt" in active and c.get("VERSION") != expected_version_bytes:
         raise SystemExit("Fel VERSION i custom-paketet")
-    if p.get("VERSION") != expected_version_bytes:
+    if "chat" in active and p.get("VERSION") != expected_version_bytes:
         raise SystemExit("Fel VERSION i portable-paketet")
 
-    try:
-        manifest = json.loads(p["MANIFEST.json"])
-    except Exception as exc:
-        raise SystemExit(f"Ogiltig MANIFEST.json: {exc}")
-    if manifest.get("version") != v:
-        raise SystemExit("Fel version i MANIFEST.json")
-    if manifest.get("knowledge") != [x.as_posix() for x in KNOWLEDGE]:
-        raise SystemExit("Fel Knowledge-lista i MANIFEST.json")
-    for name, meta in manifest.get("files", {}).items():
-        if name not in p or digest(p[name]) != meta.get("sha256"):
-            raise SystemExit(f"Manifest-hash stämmer inte: {name}")
-        if len(p[name]) != meta.get("bytes"):
-            raise SystemExit(f"Manifest-storlek stämmer inte: {name}")
+    if "chat" in active:
+        try:
+            manifest = json.loads(p["MANIFEST.json"])
+        except Exception as exc:
+            raise SystemExit(f"Ogiltig MANIFEST.json: {exc}")
+        if manifest.get("version") != v:
+            raise SystemExit("Fel version i MANIFEST.json")
+        if manifest.get("knowledge") != [x.as_posix() for x in KNOWLEDGE]:
+            raise SystemExit("Fel Knowledge-lista i MANIFEST.json")
+        for name, meta in manifest.get("files", {}).items():
+            if name not in p or digest(p[name]) != meta.get("sha256"):
+                raise SystemExit(f"Manifest-hash stämmer inte: {name}")
+            if len(p[name]) != meta.get("bytes"):
+                raise SystemExit(f"Manifest-storlek stämmer inte: {name}")
 
-    print(f"OK: technologytranslator v{v} validerad; Custom GPT-kärnan är byte-identisk med källorna")
+    critical = [
+        "Svara alltid på samma språk som användaren skriver på.",
+        "Aldrig nedlåtande.",
+        "Förklara varför något spelar roll, inte bara vad det är.",
+        "Fokusera på verksamhetsnytta, konsekvenser, risker och beslut.",
+        "Förenkla utan att förvanska.",
+        "Hitta inte på fakta om produkter, lagar, priser eller aktuella händelser.",
+    ]
+    custom_instr = c.get("gpt-instructions.md", b"").decode("utf-8")
+    chat_instr = p.get("assistant/instructions.md", b"").decode("utf-8")
+    for package_name, package_instr in [("Custom GPT", custom_instr), ("Chat", chat_instr)]:
+        for marker in critical:
+            if marker not in package_instr:
+                raise SystemExit(f"{package_name} saknar kritisk beteendemarkör: {marker}")
+
+    print(f"OK: technologytranslator v{v} validerad; Chat och Custom GPT använder samma canonical instruktion")
     return 0
 
 if __name__ == "__main__":

@@ -1,0 +1,52 @@
+schema_version: 1
+registry_id: technologytranslator-runtime-distributions
+
+builder_contract:
+  target_version: 1.5.0
+  project_contract: gpt-project.yaml
+  normalized_contract: gpt-builder-1.5-contract.yaml
+  runtime_selection: active_targets
+  artifact_policy: exact_active_target_set
+  version_source:
+    local: VERSION
+    ci: resolved_version
+    release: github_release_tag
+
+active_targets:
+  - chat
+  - custom-gpt
+
+inactive_targets:
+  claude:
+    status: assessed_not_active
+    compatibility: equivalent
+    blocker: distribution_and_regression_not_implemented
+    assessment: docs/claude-opencode-compatibility.md
+  opencode:
+    status: assessed_not_active
+    compatibility: equivalent
+    blocker: distribution_and_regression_not_implemented
+    assessment: docs/claude-opencode-compatibility.md
+  openai_plugin:
+    status: assessed_not_active
+    compatibility: equivalent
+    architecture: skills_first
+    blocker: distribution_and_regression_not_implemented
+    assessment: docs/openai-plugin-compatibility.md
+
+targets:
+  chat:
+    status: active
+    runtime_id: chatgpt_chat
+    builder: chat
+    artifact_pattern: technologytranslator-chat-v{version}.zip
+  custom-gpt:
+    status: active
+    runtime_id: chatgpt_custom
+    builder: custom_gpt
+    artifact_pattern: technologytranslator-custom-gpt-v{version}.zip
+
+release:
+  runtime_assets_from: active_targets
+  wildcard_runtime_selection: false
+  exact_artifact_set: true

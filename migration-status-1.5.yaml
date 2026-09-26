@@ -1,0 +1,163 @@
+schema_version: 1
+project:
+  id: technologytranslator
+  name: Tekniköversättaren
+  version: 1.0.0
+
+migration:
+  target_builder_version: 1.5.0
+  strategy: behavior_preserving
+  plan: docs/gpt-builder-1.5-runtime-migration.md
+  total_steps: 7
+
+progress:
+  current_step: 7
+  last_completed_step: 7
+  completed_steps:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+  skipped_steps: []
+
+preservation:
+  canonical_instruction: assistant/instructions.md
+  legacy_instruction_source: gpt-instructions.md
+  canonical_matches_legacy_byte_identical: true
+  preserve_version_1_0_0: true
+  preserve_knowledge_2_of_2: true
+  preserve_same_language_response: true
+  preserve_audience_adaptation: true
+  preserve_respectful_non_patronizing_tone: true
+  preserve_plain_language: true
+  preserve_simplify_without_distortion: true
+  preserve_business_impact_risk_decision_focus: true
+  preserve_ambiguity_uncertainty_handling: true
+  preserve_no_invented_current_facts: true
+
+gpt_builder_1_5:
+  normalized_contract: gpt-builder-1.5-contract.yaml
+  validation: scripts/validate_gpt_builder_1_5_contract.py
+  canonical_instruction: assistant/instructions.md
+  canonical_matches_legacy_instruction: true
+  same_language_response_preserved: true
+  audience_adaptation_preserved: true
+  respectful_non_patronizing_tone_preserved: true
+  plain_language_preserved: true
+  simplify_without_distortion_preserved: true
+  business_impact_risk_decision_focus_preserved: true
+  ambiguity_uncertainty_handling_preserved: true
+  no_invented_current_facts_preserved: true
+  knowledge_2_of_2_preserved: true
+  version_1_0_0_preserved: true
+  status: passed
+
+chat_custom_normalization:
+  status: passed
+  canonical_instruction_source: assistant/instructions.md
+  custom_gpt_packaging_path: gpt-instructions.md
+  chat_instruction_path: assistant/instructions.md
+  both_built_from_same_canonical_source: true
+  knowledge_2_of_2_in_both: true
+  profile_preserved: true
+  conversation_starters_preserved: true
+  same_language_marker_verified: true
+  audience_adaptation_verified: true
+  simplify_without_distortion_verified: true
+  current_fact_caution_verified: true
+  version_1_0_0_preserved: true
+
+runtime_baseline:
+  active:
+    - chat
+    - custom-gpt
+  inactive:
+    claude:
+      compatibility: equivalent
+      blocker: distribution_and_regression_not_implemented
+      assessment: docs/claude-opencode-compatibility.md
+    opencode:
+      compatibility: equivalent
+      blocker: distribution_and_regression_not_implemented
+      assessment: docs/claude-opencode-compatibility.md
+  inactive:
+    openai_plugin:
+      compatibility: equivalent
+      status: assessed_not_active
+      architecture: skills_first
+      activation: not_active
+      blocker: distribution_and_regression_not_implemented
+      assessment: docs/openai-plugin-compatibility.md
+
+claude_opencode_assessment:
+  status: passed
+  assessment: docs/claude-opencode-compatibility.md
+  canonical_behavior_changed: false
+  claude:
+    compatibility: equivalent
+    activation: not_active
+    blocker: distribution_and_regression_not_implemented
+  opencode:
+    compatibility: equivalent
+    activation: not_active
+    blocker: distribution_and_regression_not_implemented
+
+plugin_assessment:
+  status: passed
+  runtime: openai_plugin
+  compatibility: equivalent
+  architecture: skills_first
+  activation: not_active
+  blocker: distribution_and_regression_not_implemented
+  assessment: docs/openai-plugin-compatibility.md
+  canonical_behavior_changed: false
+
+runtime_registry:
+  source_of_truth: runtime-distribution-registry.yaml
+  validation: scripts/validate_runtime_distribution_registry.py
+  active_targets:
+    - chat
+    - custom-gpt
+  inactive_candidates:
+    - claude
+    - opencode
+    - openai_plugin
+  exact_artifact_set: true
+  wildcard_runtime_selection: false
+  build_targets_derived_from_registry: true
+  validation_targets_derived_from_registry: true
+  release_assets_are_explicit: true
+
+final_readiness:
+  status: ready_for_merge_after_ci
+  migration_steps_complete: 7
+  migration_steps_total: 7
+  final_gate: scripts/validate_gpt_builder_1_5_migration.py
+  canonical_behavior_preserved: true
+  version_1_0_0_preserved: true
+  knowledge_2_of_2_preserved: true
+  same_language_response_preserved: true
+  audience_adaptation_preserved: true
+  respectful_non_patronizing_tone_preserved: true
+  plain_language_preserved: true
+  simplify_without_distortion_preserved: true
+  business_impact_risk_decision_focus_preserved: true
+  ambiguity_uncertainty_handling_preserved: true
+  no_invented_current_facts_preserved: true
+  active_targets:
+    - chat
+    - custom-gpt
+  inactive_candidates:
+    - claude
+    - opencode
+    - openai_plugin
+
+next_step:
+  recommended: null
+  title: Migration complete
+  reason: "GPT Byggaren 1.5.0-migreringen är 7/7 komplett."
+
+human_readable_status: "Steg 1–7 av 7 i GPT Byggaren 1.5.0-migreringen är klara. Väntar endast på grön slut-CI för merge-readiness."

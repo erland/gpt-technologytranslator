@@ -1,0 +1,49 @@
+schema_version: 1
+project:
+  id: technologytranslator
+  name: Tekniköversättaren
+  version: 1.0.0
+
+migration:
+  target_builder_version: 1.5.0
+  strategy: behavior_preserving
+  plan: docs/gpt-builder-1.5-runtime-migration.md
+  total_steps: 7
+
+progress:
+  current_step: 2
+  last_completed_step: 1
+  completed_steps:
+    - 1
+  skipped_steps: []
+
+preservation:
+  canonical_instruction: assistant/instructions.md
+  legacy_instruction_source: gpt-instructions.md
+  canonical_matches_legacy_byte_identical: true
+  preserve_version_1_0_0: true
+  preserve_knowledge_2_of_2: true
+  preserve_same_language_response: true
+  preserve_audience_adaptation: true
+  preserve_respectful_non_patronizing_tone: true
+  preserve_plain_language: true
+  preserve_simplify_without_distortion: true
+  preserve_business_impact_risk_decision_focus: true
+  preserve_ambiguity_uncertainty_handling: true
+  preserve_no_invented_current_facts: true
+
+runtime_baseline:
+  active:
+    - chat
+    - custom-gpt
+  assessment_pending:
+    - claude
+    - opencode
+    - openai_plugin
+
+next_step:
+  recommended: 2
+  title: Normalisera GPT Byggaren 1.5-kontrakten
+  reason: "Canonical instruktion och preserve-first baseline är etablerade."
+
+human_readable_status: "Steg 1 av 7 i GPT Byggaren 1.5.0-migreringen är klart."

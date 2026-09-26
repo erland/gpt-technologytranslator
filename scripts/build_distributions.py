@@ -53,8 +53,9 @@ def build_custom(version: str, stage: Path) -> Path:
     dst = stage / "custom"
     dst.mkdir(parents=True, exist_ok=True)
     # Preserve the original installation package content byte-for-byte.
-    for rel in [Path("gpt-instructions.md"), Path("conversation-starters.md"), Path("gpt-profile.md"), Path("setup-guide.md"), *KNOWLEDGE]:
+    for rel in [Path("conversation-starters.md"), Path("gpt-profile.md"), Path("setup-guide.md"), *KNOWLEDGE]:
         copy_file(ROOT / rel, dst / rel)
+    copy_file(ROOT / "assistant/instructions.md", dst / "gpt-instructions.md")
     (dst / "VERSION").write_text(version + "\n", encoding="utf-8")
     return dst
 
@@ -62,7 +63,7 @@ def build_custom(version: str, stage: Path) -> Path:
 def build_chat(version: str, stage: Path) -> Path:
     dst = stage / "chat"
     copy_file(ROOT / "portable/START-HERE.md", dst / "START-HERE.md")
-    copy_file(ROOT / "gpt-instructions.md", dst / "assistant/instructions.md")
+    copy_file(ROOT / "assistant/instructions.md", dst / "assistant/instructions.md")
     copy_file(ROOT / "conversation-starters.md", dst / "assistant/conversation-starters.md")
     copy_file(ROOT / "gpt-profile.md", dst / "assistant/profile.md")
     for rel in KNOWLEDGE:

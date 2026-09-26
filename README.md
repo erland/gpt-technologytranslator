@@ -42,3 +42,23 @@ Workflowen validerar båda paketen och bifogar dem automatiskt som assets på Gi
 ## Portabel ChatGPT-version
 
 Bifoga `technologytranslator-chat-vX.Y.Z.zip` i en vanlig ChatGPT-konversation och be ChatGPT läsa `START-HERE.md` först.
+
+
+## GPT Byggaren 1.5.0
+
+Migreringen är **7/7 komplett**. Canonical instruktion finns i `assistant/instructions.md`; legacy-källan `gpt-instructions.md` bevaras. Build, validering och aktivt distributionsset härleds från `runtime-distribution-registry.yaml`.
+
+Bevarat genom migreringen:
+- version `1.0.0`
+- 2/2 Knowledge-filer
+- samma språk som användaren
+- målgruppsanpassning för icke-tekniker
+- respektfull och icke-nedlåtande ton
+- vardagsspråk framför teknisk jargong
+- förenkling utan att förvanska
+- fokus på verksamhetsnytta, konsekvenser, risker och beslut
+- osäkerhets- och tvetydighetshantering
+- inga fabricerade aktuella fakta
+- korta svar som standard om fördjupning inte efterfrågas
+
+Aktiva runtimes är Chat och Custom GPT. Claude Projects, OpenCode och OpenAI Plugin är compatibility-bedömda som equivalent candidates men inte aktiva distributionsmål.

@@ -95,6 +95,10 @@ runtime_policy:
       activation: not_active
       blocker: distribution_and_regression_not_implemented
       assessment: docs/claude-opencode-compatibility.md
-  assessment_pending:
     openai_plugin:
-      compatibility: assessment_pending
+      compatibility: equivalent
+      status: assessed_not_active
+      architecture: skills_first
+      activation: not_active
+      blocker: distribution_and_regression_not_implemented
+      assessment: docs/openai-plugin-compatibility.md

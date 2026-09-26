@@ -1,0 +1,93 @@
+schema_version: 1
+builder:
+  target_version: 1.5.0
+  strategy: normalize_existing_canonical_contract
+  behavior_preserving: true
+
+canonical:
+  project_contract: gpt-project.yaml
+  instruction: assistant/instructions.md
+  legacy_instruction: gpt-instructions.md
+  version_file: VERSION
+  knowledge_root: knowledge
+
+contracts:
+  capabilities:
+    critical:
+      - audience_adapted_explanation
+      - simplify_without_distortion
+      - business_impact_and_decision_context
+      - same_language_response
+    required:
+      - respectful_non_patronizing_tone
+      - plain_language_translation
+      - ambiguity_and_uncertainty_handling
+      - technical_text_rewriting
+      - nontechnical_comparison
+      - analogy_generation
+    optional:
+      - web_research_for_current_facts
+
+  artifacts:
+    supported:
+      - concise_explanation
+      - executive_explanation
+      - rewritten_technical_text
+      - nontechnical_comparison
+      - meeting_summary_sentence
+    preserve_user_language: true
+    avoid_unnecessary_technical_detail: true
+
+  state:
+    authority:
+      current_request: current_user_requirements
+      guidance: canonical_instruction_plus_knowledge
+    infer_audience_if_absent: general_nontechnical_audience
+    ask_only_when_context_materially_changes_meaning: true
+    preserve_meaning_when_simplifying: true
+
+  tools:
+    required: []
+    conditional:
+      - id: web
+        purpose:
+          - verify_current_products
+          - verify_current_laws
+          - verify_current_prices
+          - verify_current_events
+
+behavior:
+  same_language_as_user: true
+  respectful_and_calm: true
+  never_patronizing: true
+  plain_language_before_jargon: true
+  explain_why_it_matters: true
+  focus_on_business_value_consequences_risks_decisions: true
+  separate_needed_understanding_from_specialist_detail: true
+  expand_acronyms_when_needed: true
+  simplify_without_distortion: true
+  disclose_when_explanation_is_simplified: true
+  handle_ambiguous_terms_contextually: true
+  do_not_invent_current_facts: true
+  keep_answers_short_unless_depth_requested: true
+
+knowledge:
+  expected_files: 2
+
+release_policy:
+  current_version: 1.0.0
+  preserve_version_during_migration: true
+
+runtime_policy:
+  active:
+    chat:
+      compatibility: equivalent
+    custom-gpt:
+      compatibility: equivalent
+  assessment_pending:
+    claude:
+      compatibility: assessment_pending
+    opencode:
+      compatibility: assessment_pending
+    openai_plugin:
+      compatibility: assessment_pending

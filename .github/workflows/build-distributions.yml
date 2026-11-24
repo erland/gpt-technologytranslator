@@ -1,80 +1,101 @@
 name: Build GPT distributions
-
 on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:
   release:
     types: [published]
-
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing published release tag (optional; empty = build only)'
+        required: false
+        type: string
 permissions:
-  contents: write
-
+  contents: read
+concurrency:
+  group: distributions-${{ github.event.release.tag_name || inputs.release_tag || github.ref }}
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      ENGINE_VERSION: '1.6.33'
+      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag || '' }}
+      GH_TOKEN: ${{ github.token }}
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
     steps:
+      - name: Validate tag and published release
+        if: env.RELEASE_TAG != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
+          [[ "$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" == false ]]
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+        with:
+          ref: ${{ env.RELEASE_TAG != '' && format('refs/tags/{0}', env.RELEASE_TAG) || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Install validation dependencies
-        run: python3 -m pip install PyYAML
-
-      - name: Resolve version
+      - run: python -m pip install PyYAML jsonschema
+      - name: Install pinned canonical engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 "https://github.com/erland/gpt-byggaren/releases/download/v${ENGINE_VERSION}/gpt-byggaren-engine-${ENGINE_VERSION}.zip" -o "$RUNNER_TEMP/engine.zip"
+          python scripts/verify_engine.py "$RUNNER_TEMP/engine.zip" "$RUNNER_TEMP/engine"
+          python "$RUNNER_TEMP/engine/scripts/selftest_distribution_engine.py" --source "$RUNNER_TEMP/engine"
+          python "$RUNNER_TEMP/engine/scripts/install_distribution_engine.py" --source "$RUNNER_TEMP/engine" --project-root .
+      - name: Resolve project version
         id: version
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            tag='${{ github.event.release.tag_name }}'
-            if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
-              echo "Release tag must be v<semver>, got: $tag" >&2
+          version="$(tr -d '[:space:]' < VERSION)"
+          if [[ -n "$RELEASE_TAG" ]]; then version="${RELEASE_TAG#v}"; fi
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+      - name: Validate and build
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: bash scripts/check_and_build.sh "$RUNNER_TEMP/engine" "$VERSION"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: distributions
+          path: dist/
+          if-no-files-found: error
+  publish:
+    needs: build
+    if: needs.build.outputs.tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ needs.build.outputs.tag }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: distributions
+          path: dist
+      - name: Upload without overwriting existing assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum -c SHA256SUMS.txt
+          files=(*.zip SHA256SUMS.txt DELIVERY-MANIFEST.json)
+          [[ ${#files[@]} == 8 ]]
+          existing="$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+          for file in "${files[@]}"; do
+            if grep -Fxq -- "$file" <<< "$existing"; then
+              echo "Existing asset: $file; refusing upload" >&2
               exit 1
             fi
-            version="${tag#v}"
-          else
-            version="$(tr -d '[:space:]' < VERSION)"
-          fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-
-      - name: Validate GPT Builder 1.5 canonical contract
-        run: python3 scripts/validate_gpt_builder_1_5_contract.py
-
-      - name: Validate Claude and OpenCode compatibility
-        run: python3 scripts/validate_claude_opencode_compatibility.py
-
-      - name: Validate OpenAI Plugin compatibility
-        run: python3 scripts/validate_openai_plugin_compatibility.py
-
-      - name: Validate runtime distribution registry
-        run: python3 scripts/validate_runtime_distribution_registry.py
-
-      - name: Final GPT Builder 1.5 migration gate
-        run: python3 scripts/validate_gpt_builder_1_5_migration.py
-
-      - name: Build distributions
-        run: python3 scripts/build_distributions.py --version "${{ steps.version.outputs.version }}"
-
-      - name: Validate distributions
-        run: python3 scripts/validate_distributions.py --version "${{ steps.version.outputs.version }}"
-
-      - name: Upload Actions artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: technologytranslator-v${{ steps.version.outputs.version }}
-          path: |
-            dist/technologytranslator-custom-gpt-v${{ steps.version.outputs.version }}.zip
-            dist/technologytranslator-chat-v${{ steps.version.outputs.version }}.zip
-          retention-days: 14
-
-      - name: Attach ZIP files to GitHub Release
-        if: github.event_name == 'release'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release upload "${{ github.event.release.tag_name }}"             "dist/technologytranslator-custom-gpt-v${{ steps.version.outputs.version }}.zip"             "dist/technologytranslator-chat-v${{ steps.version.outputs.version }}.zip"             --clobber
+          done
+          gh release upload "$RELEASE_TAG" "${files[@]}" --repo "$GITHUB_REPOSITORY"

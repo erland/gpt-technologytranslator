@@ -3,67 +3,222 @@ project:
   id: technologytranslator
   name: Tekniköversättaren
   profile: nontechnical_technology_explainer
-
+  language: sv
+  description: Förklarar teknik för icke-tekniker med vardagsspråk, verksamhetsnytta
+    och beslutsfokus.
+development:
+  plan: docs/development-plan.md
+  status: project-status.yaml
+  human_readable_status: STATUS.md
+  status_schema: schemas/project-status.schema.json
+model_robustness:
+  level: lightweight
+  design_target: simpler_and_stronger_llms
+  separate_model_instructions: false
+  prefer_deterministic_validation: true
+  max_core_policy_hops: 1
+structure:
+  canonical_root: canonical
+  instructions:
+    path: canonical/instructions.md
+  conversation_starters:
+    path: canonical/conversation-starters
+  runtime_policy:
+    path: canonical/runtime-policy
+  knowledge:
+    path: knowledge
+  schemas:
+    path: schemas
+  templates:
+    path: templates
+  scripts:
+    path: scripts
 instructions:
-  canonical: assistant/instructions.md
-  legacy_source: gpt-instructions.md
-  preserve_legacy_source_byte_identical: true
-
+  mode: monolithic
+  canonical: canonical/instructions.md
+  single_source_of_truth: true
 knowledge_architecture:
   canonical_root: knowledge
   expected_files: 2
-  files:
-    - knowledge/examples.md
-    - knowledge/explanation-patterns.md
-
+  files: &id001
+  - knowledge/examples.md
+  - knowledge/explanation-patterns.md
+skills:
+  contract_version: 1
+  schema: schemas/skill-contract.schema.json
+  mode: explicit
+  definitions:
+  - id: technology-explanation
+    name: technology-explanation
+    description: Förklara tekniska begrepp, plattformar och förändringar, förenkla
+      teknisk text och jämför alternativ för icke-tekniker och beslutsfattare.
+    references: *id001
+    assets: []
+    scripts: []
+capabilities:
+  contract_version: 1
+  schema: schemas/capability-contract.schema.json
+  recommendation_mode: inferred_from_use_case
+  requirements:
+    web:
+      level: optional
+    code_execution:
+      level: not_required
+    persistent_state:
+      level: not_required
+    external_tools:
+      level: not_required
+    image_generation:
+      level: not_required
+    shell:
+      level: not_required
+    structured_data:
+      level: optional
+tools:
+  contract_version: 1
+  schema: schemas/tool-contract.schema.json
+  tools: []
+workspace_state:
+  contract_version: 1
+  schema: schemas/workspace-state-contract.schema.json
+  workspace:
+    requirement: not_required
+    persistence: not_required
+    portable: false
+    separate_from_assistant: true
+  state:
+    requirement: not_required
+    persistence: not_required
+    authority: none
+artifacts:
+  contract_version: 1
+  schema: schemas/artifact-contract.schema.json
+  outputs:
+    response:
+      kind: document
+      format: markdown
+      requirement: required
+      persistence: ephemeral
+      multiplicity: one
 runtime:
+  primary: none
   chat_zip:
     enabled: true
-  custom_gpt:
-    enabled: true
-    instruction:
-      source: assistant/instructions.md
-      packaging_path: gpt-instructions.md
-      legacy_packaging_path_only: true
-      max_characters: 8000
-    knowledge:
-      strategy: exact_list
-      expected_files: 2
+    role: peer_distribution
+    start_here_template: templates/START-HERE.chat.md.tpl
+    layout:
+      assistant: assistant
+      knowledge: knowledge
+      schemas: schemas
+      scripts: scripts
+      templates: templates
+      runtime: runtime
+    bundle_distribution_engine: false
   claude:
-    enabled: false
-    compatibility: equivalent
-    activation: not_active
-    blocker: distribution_and_regression_not_implemented
-    assessment: docs/claude-opencode-compatibility.md
+    enabled: true
+    role: peer_distribution
+    mode: claude_project
+    project:
+      instructions: project/instructions.md
+      knowledge: project/knowledge
+      runtime_contract: project/runtime-contract.json
+    templates:
+      readme: templates/README.claude.md.tpl
+    validation:
+      require_instructions: true
+      require_runtime_contract: true
   opencode:
+    enabled: true
+    role: peer_distribution
+    mode: opencode_workspace
+    layout:
+      instructions: AGENTS.md
+      config: opencode.json
+      tools: .opencode/tools
+      runtime_scripts: scripts
+      runtime_contract: .opencode/runtime-contract.json
+      knowledge: knowledge
+    templates:
+      readme: templates/README.opencode.md.tpl
+    validation:
+      require_agents_md: true
+      require_runtime_contract: true
+    skills:
+      enabled: true
+      directory: .opencode/skills
+  plugin:
+    enabled: true
+    role: peer_distribution
+    mode: openai_plugin
+    layout:
+      manifest_file: plugin.json
+      skills: skills
+      references: references
+      assets: assets
+      scripts: scripts
+    templates:
+      readme: templates/README.plugin.md.tpl
+    validation:
+      require_manifest: true
+      require_skill: true
+      require_skill_frontmatter: true
+  custom_gpt:
     enabled: false
-    compatibility: equivalent
-    activation: not_active
-    blocker: distribution_and_regression_not_implemented
-    assessment: docs/claude-opencode-compatibility.md
-  openai_plugin:
-    enabled: false
-    compatibility: equivalent
-    status: assessed_not_active
-    architecture: skills_first
-    activation: not_active
-    blocker: distribution_and_regression_not_implemented
-    assessment: docs/openai-plugin-compatibility.md
-
-capabilities:
-  critical:
-    - audience_adapted_explanation
-    - simplify_without_distortion
-    - business_impact_and_decision_context
-    - same_language_response
-  important:
-    - technical_text_rewriting
-    - nontechnical_comparison
-    - analogy_generation
-    - ambiguity_and_uncertainty_handling
-    - optional_web_research_for_current_facts
-
+build_system:
+  targets:
+  - project
+  - chat
+  - claude_project
+  - claude_skills
+  - opencode
+  - plugin
+  runtime_targets:
+    chat:
+      runtime_id: chatgpt_chat
+      runtime_key: chat_zip
+      builder: chat
+      artifact_type: chat_zip
+      filename_pattern: <project-id>-chat-<version>.zip
+    claude_project:
+      runtime_id: claude_project
+      runtime_key: claude
+      builder: claude
+      artifact_type: claude_project_zip
+      filename_pattern: <project-id>-claude-project-<version>.zip
+    claude_skills:
+      runtime_id: claude_skills
+      runtime_key: claude
+      builder: claude_skills
+      artifact_type: claude_skills_zip
+      filename_pattern: <project-id>-claude-skills-<version>.zip
+    opencode:
+      runtime_id: opencode
+      runtime_key: opencode
+      builder: opencode
+      artifact_type: opencode_zip
+      filename_pattern: <project-id>-opencode-<version>.zip
+    plugin:
+      runtime_id: openai_plugin
+      runtime_key: plugin
+      builder: plugin
+      artifact_type: plugin_zip
+      filename_pattern: <project-id>-plugin-<version>.zip
+  output_root: dist
+  working_root: build
+  deterministic_zip: true
+  manifest: true
+  checksums: sha256
+  project_zip_excludes:
+  - build/**
+  - dist/**
+  - .git/**
+  - '**/__pycache__/**'
+  - '**/.pytest_cache/**'
 release:
   version_file: VERSION
   preserve_current_version: true
   current_version: 1.0.0
+migration:
+  engine_version: 1.6.33
+  source_revision: 78b33f026b3c632480f42421b955c07673c0ca89
+  source_builder_version: 1.5.0

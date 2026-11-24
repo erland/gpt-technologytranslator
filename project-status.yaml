@@ -1,0 +1,42 @@
+schema_version: 1
+project:
+  id: technologytranslator
+  name: Tekniköversättaren
+plan:
+  path: docs/development-plan.md
+  total_steps: 6
+progress:
+  current_phase: Slutverifiering – lokalt verifierad, extern granskning återstår
+  current_step: 6
+  last_completed_step: 5
+  completed_steps:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+state:
+  overall: warning
+  blocking_issues: []
+  warnings:
+  - 'MODEL-ROBUSTNESS-001: originalvalidatorn för 1.6.33 är inte anpassad till lightweight;
+    releasegodkännande kräver uttrycklig bedömning eller rättad motor.'
+  - Faktiska värdmiljötester och GitHub Actions ej körda lokalt.
+next_step:
+  recommended: 6
+  title: Granska PR och verifiera värdmiljöer
+  reason: Lokalt bygge, innehåll, paritet och release-simulering godkända. Slutför
+    GitHub CI, funktionella stickprov och bedöm validatoravvikelsen innan release.
+resume:
+  supported: true
+  required_files:
+  - gpt-project.yaml
+  - project-status.yaml
+  - docs/development-plan.md
+  - canonical/instructions.md
+  human_readable_status: STATUS.md
+delivery:
+  mode: github
+migration:
+  engine_version: 1.6.33
+  source_revision: 78b33f026b3c632480f42421b955c07673c0ca89

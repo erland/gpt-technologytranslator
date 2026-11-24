@@ -1,3 +1,3 @@
 # Projektstatus
 
-5 av 6 migrationssteg formellt avslutade; steg 6 lokalt verifierat med dokumenterad avvikelse. Motor 1.6.33. Lint och hygiene utan anmärkning i ren källkatalog, tre regressionstester, fem runtimepaket, paritetskontroll, leveransvalidator och release-simulering godkända. GitHub CI och funktionella värdmiljötester återstår. MODEL-ROBUSTNESS-001 måste bedömas eller rättas före releasegodkännande. Se [slutverifiering](docs/final-verification.md).
+Fem migrationssteg formellt avslutade; steg 6 lokalt verifierat och migrations-PR mergad. Motor 1.6.33. GitHub CI och releasebyggning 1.2.0 godkända. Positiva användarrapporterade stickprov, men fullständig funktionell acceptans återstår. MODEL-ROBUSTNESS-001 måste bedömas eller rättas före slutligt releasegodkännande. Se [acceptansstatus](docs/acceptance-1.2.0.md), [testsvit](docs/acceptance-tests.md) och [slutverifiering](docs/final-verification.md).

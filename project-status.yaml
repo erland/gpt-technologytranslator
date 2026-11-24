@@ -6,7 +6,7 @@ plan:
   path: docs/development-plan.md
   total_steps: 6
 progress:
-  current_phase: Slutverifiering – lokalt verifierad, extern granskning återstår
+  current_phase: Slutverifiering – CI och releasebyggning godkända, funktionell acceptans återstår
   current_step: 6
   last_completed_step: 5
   completed_steps:
@@ -21,12 +21,12 @@ state:
   warnings:
   - 'MODEL-ROBUSTNESS-001: originalvalidatorn för 1.6.33 är inte anpassad till lightweight;
     releasegodkännande kräver uttrycklig bedömning eller rättad motor.'
-  - Faktiska värdmiljötester och GitHub Actions ej körda lokalt.
+  - Positiva användarrapporterade stickprov; full funktionell acceptans ej dokumenterad.
 next_step:
   recommended: 6
-  title: Granska PR och verifiera värdmiljöer
-  reason: Lokalt bygge, innehåll, paritet och release-simulering godkända. Slutför
-    GitHub CI, funktionella stickprov och bedöm validatoravvikelsen innan release.
+  title: Verifiera funktionell acceptans och bedöm validatoravvikelse
+  reason: GitHub CI och releasebyggning 1.2.0 godkända. Dokumentera funktionella
+    acceptanstester och bedöm validatoravvikelsen före slutligt releasegodkännande.
 resume:
   supported: true
   required_files:

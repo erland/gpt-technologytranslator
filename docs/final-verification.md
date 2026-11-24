@@ -26,3 +26,9 @@ Kör samma fyra scenarier i aktiverade värdmiljöer; jämför kvalitativt mot o
 | Jämför två tekniska alternativ för en styrgrupp. | Beskriv konsekvenser, risker och avvägningar utan obestyrkta fakta. |
 
 PR kan granskas som migrationskandidat, men ingen release förklaras godkänd innan kvarstående kontroller och validatoravvikelse bedömts.
+
+## Uppföljning av 1.2.0 – 2026-11-24
+
+GitHub bekräftar godkänd [PR-CI](https://github.com/erland/gpt-technologytranslator/actions/runs/45364570898), [main-CI](https://github.com/erland/gpt-technologytranslator/actions/runs/45364795831) och [releasebyggning](https://github.com/erland/gpt-technologytranslator/actions/runs/45365167699). [Release v1.2.0](https://github.com/erland/gpt-technologytranslator/releases/tag/v1.2.0) är markerad som prerelease och har åtta uppladdade filer. Användaren rapporterar positiva funktionella stickprov; exakta frågor, svar, modeller och testade distributioner är inte dokumenterade, så inga T01–T10-poäng tilldelas. Installerad Plugin 1.2.0 har tidigare konstaterats åtkomlig. Full funktionell acceptans och MODEL-ROBUSTNESS-001 återstår. OpenCodes missvisande genererade README är en separat motorfråga.
+
+Den återanvändbara [acceptanstestsviten](acceptance-tests.md) ersätter de fyra preliminära scenarierna ovan vid framtida acceptans.

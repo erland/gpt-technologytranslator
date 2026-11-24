@@ -2,7 +2,7 @@
 
 Förklarar teknik för icke-tekniker på användarens språk med fokus på verksamhetsnytta, konsekvenser, risker och beslut.
 
-Projektversion: `VERSION`. Byggmotor: GPT Byggaren 1.6.33. Migreringskandidat; se [status](STATUS.md) och [plan](docs/development-plan.md).
+Projektversion: `VERSION`. Byggmotor: GPT Byggaren 1.6.33. Migrerad; se [status](STATUS.md) och [plan](docs/development-plan.md).
 
 ## Källor
 
@@ -33,4 +33,4 @@ Historiska 1.5-dokument finns i `docs/history/` och beskriver inte aktuella bygg
 
 ## Verifiering före merge och release
 
-Se [slutverifiering](docs/final-verification.md). Lokal strukturell paritet är verifierad; funktionella värdmiljötester och GitHub Actions behöver fortfarande verifieras. Originalvalidatorns MODEL-ROBUSTNESS-001 är en dokumenterad avvikelse och inte ett godkänt test.
+Se [slutverifiering](docs/final-verification.md). Lokal strukturell paritet, GitHub CI och releasebyggning 1.2.0 är verifierade. Se [acceptanstester](docs/acceptance-tests.md), [resultatmall](docs/acceptance-results-template.md) och [acceptansstatus 1.2.0](docs/acceptance-1.2.0.md). Full funktionell acceptans återstår. Originalvalidatorns MODEL-ROBUSTNESS-001 är en dokumenterad avvikelse och inte ett godkänt test.
